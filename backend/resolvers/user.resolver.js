@@ -1,10 +1,17 @@
+import { supabase } from '../db/connectDB.js';
 import {users} from '../dummyData/data.js'
 
 
 const userResolver = {
     Query: {
-        users: () => {
-            return users;
+        users: async() => {
+            try {
+                const users = await supabase.from('users').select("*");
+                return users.data;
+
+            } catch (error) {
+                console.log('Error fetching users:', error);
+            }
         },
 
         user: (_, {userId}) => {

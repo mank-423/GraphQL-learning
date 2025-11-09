@@ -1,6 +1,7 @@
 import express from 'express';
 import http from 'http';
 import cors from 'cors';
+import env from 'dotenv';
 
 import { ApolloServer } from '@apollo/server';
 import { ApolloServerPluginDrainHttpServer } from '@apollo/server/plugin/drainHttpServer';
@@ -8,9 +9,14 @@ import { expressMiddleware } from '@as-integrations/express5';
 
 import mergedResolvers from './resolvers/index.js';
 import mergedTypeDefs from './typeDefs/index.js';
+import { connectDB } from './db/connectDB.js';
+
+// Dotenv config
+env.config();
 
 const app = express();
 const httpServer = http.createServer(app);
+
 
 const server = new ApolloServer({
   typeDefs: mergedTypeDefs,
@@ -18,16 +24,17 @@ const server = new ApolloServer({
   plugins: [ApolloServerPluginDrainHttpServer({ httpServer })],
 });
 
+await connectDB();
 await server.start();
 
 app.use(
-  '/',
   cors(),
   express.json(),
   expressMiddleware(server, {
     context: async ({ req }) => (req),
   }),
 );
+
 // Modified server startup
 await new Promise((resolve) =>
   httpServer.listen({ port: 4000 }, resolve),
