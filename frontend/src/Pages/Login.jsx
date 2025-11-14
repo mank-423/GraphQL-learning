@@ -1,37 +1,61 @@
 import { useState } from "react";
-import { signInWithEmail } from "../lib/auth";
+import Cookies from "js-cookie";
+import { supabase } from "../lib/supabaseClient";
 
 export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [error, setError] = useState(null);
+  const [errorMsg, setErrorMsg] = useState(null);
 
-  const submit = async (e) => {
+  const handleLogin = async (e) => {
     e.preventDefault();
-    setError(null);
+    setErrorMsg(null);
 
-    const { error } = await signInWithEmail(email, password);
-    if (error) setError(error.message);
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
+
+    if (error) {
+      setErrorMsg(error.message);
+      return;
+    }
+
+    const accessToken = data.session?.access_token;
+    if (!accessToken) {
+      setErrorMsg("No session returned");
+      return;
+    }
+
+    // ✅ Store in cookie (not HttpOnly, but secure + short life)
+    Cookies.set("sb_token", accessToken, {
+      expires: 1 / 24, // 1 hour
+      secure: true,
+      sameSite: "Strict",
+    });
+
+    alert("Logged in!");
+    window.location.href = "/";
   };
 
   return (
-    <form onSubmit={submit}>
-      <h2>Login</h2>
+    <form onSubmit={handleLogin} style={{ display: "flex", flexDirection: "column", gap: 10 }}>
       <input
-        placeholder="Email"
+        placeholder="email"
         value={email}
         onChange={(e) => setEmail(e.target.value)}
-      /><br />
+      />
+
       <input
+        placeholder="password"
         type="password"
-        placeholder="Password"
         value={password}
         onChange={(e) => setPassword(e.target.value)}
-      /><br />
+      />
 
-      <button type="submit">Sign In</button>
+      <button type="submit">Login</button>
 
-      {error && <p style={{ color: "red" }}>{error}</p>}
+      {errorMsg && <p style={{ color: "red" }}>{errorMsg}</p>}
     </form>
   );
 }

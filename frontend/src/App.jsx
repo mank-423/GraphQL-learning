@@ -1,31 +1,19 @@
-import { BrowserRouter, Routes, Route } from "react-router-dom";
-import { AuthProvider } from "./context/AuthContext";
+import { Routes, Route, Navigate } from "react-router-dom";
 import Login from "./Pages/Login";
-import Home from "./Pages/Home";
-import ProtectedRoute from "./utils/ProtectedRoute";
 import Signup from "./Pages/Signup";
+import Home from "./pages/Home";
 
 function App() {
   return (
-    <AuthProvider>
-      <BrowserRouter>
-        <Routes>
+    <Routes>
+      <Route path="/" element={<Home />} />
 
-          <Route path="/login" element={<Login />} />
-          <Route path="/signup" element={<Signup />} />
+      <Route path="/login" element={<Login />} />
+      <Route path="/signup" element={<Signup />} />
 
-          <Route
-            path="/"
-            element={
-              <ProtectedRoute>
-                <Home />
-              </ProtectedRoute>
-            }
-          />
-
-        </Routes>
-      </BrowserRouter>
-    </AuthProvider>
+      {/* If route doesn't exist */}
+      <Route path="*" element={<Navigate to="/" />} />
+    </Routes>
   );
 }
 

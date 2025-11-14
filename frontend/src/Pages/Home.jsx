@@ -1,15 +1,9 @@
-import { signOut } from "../lib/auth";
-import { useAuth } from "../context/AuthContext";
-
-export default function Home() {
-  const { session } = useAuth();
-
+const Home = () => {
   return (
     <div>
-      <h1>Welcome!</h1>
-      <p>Logged in as: {session?.user?.email}</p>
-
-      <button onClick={signOut}>Logout</button>
+        <h1>Protected Route</h1>
     </div>
-  );
+  )
 }
+
+export default Home
