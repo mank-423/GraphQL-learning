@@ -4,7 +4,7 @@ type User {
   username: String!
   name: String!
   password: String!
-  profilePicture: String
+  profilepic: String
   gender: String!
 }
 

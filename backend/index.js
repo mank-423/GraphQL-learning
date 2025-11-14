@@ -10,6 +10,7 @@ import { expressMiddleware } from '@as-integrations/express5';
 import mergedResolvers from './resolvers/index.js';
 import mergedTypeDefs from './typeDefs/index.js';
 import { connectDB } from './db/connectDB.js';
+import { buildContext } from './context/index.js';
 
 // Dotenv config
 env.config();
@@ -31,8 +32,8 @@ app.use(
   cors(),
   express.json(),
   expressMiddleware(server, {
-    context: async ({ req }) => (req),
-  }),
+    context: buildContext
+  })
 );
 
 // Modified server startup

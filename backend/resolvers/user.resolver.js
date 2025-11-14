@@ -1,5 +1,4 @@
 import { supabase, supabaseAdmin } from '../db/connectDB.js';
-import { users } from '../dummyData/data.js'
 
 
 const userResolver = {
@@ -14,9 +13,23 @@ const userResolver = {
             }
         },
 
-        user: (_, { userId }) => {
-            return users.find((user) => user._id === userId);
+        authUser: async (_, __, { userId }) => {
+            if (!userId) return null;
+
+            const { data, error } = await supabase
+                .from("users")
+                .select("*")
+                .eq("id", userId)
+                .single();
+
+            if (error) {
+                console.log("Error fetching user:", error);
+                return null;
+            }
+
+            return data;
         }
+
     },
     Mutation: {
         signUp: async (_, { input }) => {
@@ -33,6 +46,13 @@ const userResolver = {
 
             const userId = authData.user.id;
 
+            // Using avatar API:
+            // https://avatar.iran.liara.run/public/boy?username=[username]
+
+            const type = (gender === 'male') ? 'boy' : 'girl';
+
+            const avatarUrl = `https://avatar.iran.liara.run/public/${type}?username=${username}`;
+
             // 2. Insert into your users table
             const { data: userRow, error: insertError } = await supabase
                 .from('users')
@@ -41,7 +61,8 @@ const userResolver = {
                     username,
                     name,
                     gender,
-                    email
+                    email,
+                    profilepic: avatarUrl,
                 })
                 .select()
                 .single();
@@ -61,11 +82,11 @@ const userResolver = {
                 password
             });
 
-            if (error) {
+            if (authError) {
                 throw new Error(error.message);
             }
 
-            const authUser = data.user;
+            const authUser = authData.user;
             const token = data.session.access_token;
 
             // 2. Fetch user row from your "users" table
