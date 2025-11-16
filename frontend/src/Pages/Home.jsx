@@ -4,9 +4,10 @@ import Cookies from "js-cookie";
 const Home = () => {
 
   const [loading, setLoading] = useState(false);
+  const [userData, setUserData] = useState(null);
 
   const fetchUser = async (e) => {
-    
+
     setLoading(true);
 
     const token = Cookies.get('sb_token');
@@ -24,7 +25,7 @@ const Home = () => {
     try {
       const res = await fetch("http://localhost:4000/graphql", {
         method: "POST",
-        headers: { 
+        headers: {
           "Authorization": `Bearer ${token}`,
           "Content-Type": "application/json",
         },
@@ -35,7 +36,9 @@ const Home = () => {
 
       const result = await res.json();
 
-      console.log('result:', result);
+      console.log('result:', result.data);
+      setUserData(result.data);
+
       if (result.errors) {
         setLoading(false);
         return;
@@ -48,13 +51,28 @@ const Home = () => {
     setLoading(false);
   };
 
-  useEffect(()=>{
+
+  const logout = () => {
+    Cookies.remove("sb_token");
+    window.location.href = "/login";
+  };
+
+
+  useEffect(() => {
     fetchUser();
   }, [])
 
   return (
     <div>
       <h1>Protected Route</h1>
+
+      {userData && (
+        <img src={userData.authUser?.profilepic} alt="Image of user" />
+      )}
+
+      <button onClick={logout}>
+        Logout
+      </button>
     </div>
   )
 }
