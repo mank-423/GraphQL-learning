@@ -10,7 +10,7 @@ import { expressMiddleware } from '@as-integrations/express5';
 import mergedResolvers from './resolvers/index.js';
 import mergedTypeDefs from './typeDefs/index.js';
 import { connectDB } from './db/connectDB.js';
-import { buildContext } from './context/index.js';
+import { buildContext } from './middleware/context/index.js';
 
 // Dotenv config
 env.config();
