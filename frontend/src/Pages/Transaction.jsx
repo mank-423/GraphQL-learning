@@ -1,5 +1,6 @@
 import FormSkeleton from "@/components/Skeleton/FormSkeleton";
 import Cookies from "js-cookie";
+import toast from "react-hot-toast";
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 
@@ -21,6 +22,7 @@ const Transaction = () => {
   const fetchTransactionDetails = async () => {
     try {
       setLoading(true);
+
       const query = `
         query($transactionId: ID!) {
           transaction(transactionId: $transactionId) {
@@ -35,7 +37,7 @@ const Transaction = () => {
       const res = await fetch("http://localhost:4000/graphql", {
         method: "POST",
         headers: {
-          "Authorization": `Bearer ${token}`,
+          Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
@@ -45,26 +47,23 @@ const Transaction = () => {
       });
 
       const json = await res.json();
-
-      if (json.errors) {
-        throw new Error(json.errors[0].message);
-      }
+      if (json.errors) throw new Error(json.errors[0].message);
 
       setForm({
         amount: json.data.transaction.amount,
         description: json.data.transaction.description,
         type: json.data.transaction.type,
       });
+
+      toast.success("Transaction edited!");
     } catch (error) {
-      setErrorMsg(error.message || "Error loading transaction");
+      toast.error(error.message || "Failed to load transaction");
+      setErrorMsg(error.message);
     } finally {
       setLoading(false);
     }
   };
 
-  // ===============================
-  // Update transaction
-  // ===============================
   const handleUpdate = async (e) => {
     e.preventDefault();
     setSaving(true);
@@ -85,7 +84,7 @@ const Transaction = () => {
       const res = await fetch("http://localhost:4000/graphql", {
         method: "POST",
         headers: {
-          "Authorization": `Bearer ${token}`,
+          Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
@@ -102,17 +101,13 @@ const Transaction = () => {
       });
 
       const json = await res.json();
+      if (json.errors) throw new Error(json.errors[0].message);
 
-      if (json.errors) {
-        throw new Error(json.errors[0].message);
-      }
-
-      console.log("Updated:", json.data.updateTransaction);
-
-      alert("Transaction updated!");
-      navigate("/"); // redirect back to home
+      toast.success("Transaction updated!");
+      navigate("/");
     } catch (error) {
-      setErrorMsg(error.message || "Error updating transaction");
+      toast.error(error.message || "Error updating transaction");
+      setErrorMsg(error.message);
     } finally {
       setSaving(false);
     }
@@ -151,7 +146,6 @@ const Transaction = () => {
             required
           />
 
-          {/* TYPE FIELD */}
           <div className="flex gap-4">
             <label>
               <input
