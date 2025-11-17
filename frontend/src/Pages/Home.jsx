@@ -70,7 +70,7 @@ const Home = () => {
         <img src={userData.authUser?.profilepic} alt="Image of user" />
       )}
 
-      <button className="bg-white" onClick={logout}>
+      <button onClick={logout}>
         Logout
       </button>
     </div>

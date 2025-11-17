@@ -10,6 +10,8 @@ import { PublicRoute } from "../utils/PublicRoute";
 import Cookies from "js-cookie";
 import Navbar from "./components/Navbar";
 
+import 'react-loading-skeleton/dist/skeleton.css'
+
 function App() {
 
   const authUser = Cookies.get('sb_token');
