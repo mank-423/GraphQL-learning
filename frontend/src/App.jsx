@@ -1,33 +1,67 @@
-import { Routes, Route, Navigate } from "react-router-dom";
+import { Routes, Route } from "react-router-dom";
 import Login from "./Pages/Login";
 import Signup from "./Pages/Signup";
 import Home from "./Pages/Home";
-import { PrivateRoute } from "../utils/PrivateRoute";
 import Transaction from "./Pages/Transaction";
 import NotFoundPage from "./Pages/NotFoundPage";
 
+import { PrivateRoute } from "../utils/PrivateRoute";
+import { PublicRoute } from "../utils/PublicRoute";
+import Cookies from "js-cookie";
+import Navbar from "./components/Navbar";
 
 function App() {
+
+  const authUser = Cookies.get('sb_token');
+
+
   return (
-    <Routes>
-      <Route path="/" element={
-        <PrivateRoute>
-          <Home />
-        </PrivateRoute>
-      }
-      />
+    <>
+      {authUser && <Navbar />}
 
-      <Route path="/transaction/:id" element={
-        <PrivateRoute>
-          <Transaction />
-        </PrivateRoute>
-      } />
+      <Routes>
+        {/* Private Pages */}
+        <Route
+          path="/"
+          element={
+            <PrivateRoute>
+              <Home />
+            </PrivateRoute>
+          }
+        />
 
-      <Route path="/login" element={<Login />} />
-      <Route path="/signup" element={<Signup />} />
+        <Route
+          path="/transaction/:id"
+          element={
+            <PrivateRoute>
+              <Transaction />
+            </PrivateRoute>
+          }
+        />
 
-      <Route path="*" element={<NotFoundPage />} />
-    </Routes>
+        {/* Public Pages (can't access if logged in) */}
+        <Route
+          path="/login"
+          element={
+            <PublicRoute>
+              <Login />
+            </PublicRoute>
+          }
+        />
+
+        <Route
+          path="/signup"
+          element={
+            <PublicRoute>
+              <Signup />
+            </PublicRoute>
+          }
+        />
+
+        {/* Fallback */}
+        <Route path="*" element={<NotFoundPage />} />
+      </Routes>
+    </>
   );
 }
 
