@@ -3,6 +3,8 @@ import Login from "./Pages/Login";
 import Signup from "./Pages/Signup";
 import Home from "./Pages/Home";
 import { PrivateRoute } from "../utils/PrivateRoute";
+import Transaction from "./Pages/Transaction";
+import NotFoundPage from "./Pages/NotFoundPage";
 
 
 function App() {
@@ -12,13 +14,19 @@ function App() {
         <PrivateRoute>
           <Home />
         </PrivateRoute>
+      }
+      />
+
+      <Route path="/transaction/:id" element={
+        <PrivateRoute>
+          <Transaction />
+        </PrivateRoute>
       } />
 
       <Route path="/login" element={<Login />} />
       <Route path="/signup" element={<Signup />} />
 
-      {/* If route doesn't exist */}
-      <Route path="*" element={<Navigate to="/" />} />
+      <Route path="*" element={<NotFoundPage />} />
     </Routes>
   );
 }

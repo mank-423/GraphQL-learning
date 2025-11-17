@@ -46,7 +46,6 @@ export default function Signup() {
 
       alert("Signup successful!");
       window.location.href = "/login";
-
     } catch (err) {
       setErrorMsg("Something went wrong. Please try again.");
     }
@@ -55,79 +54,135 @@ export default function Signup() {
   };
 
   return (
-    <form
-      onSubmit={handleSignup}
-      style={{
-        display: "flex",
-        flexDirection: "column",
-        gap: "12px",
-        width: "300px",
-        margin: "auto",
-        marginTop: "40px"
-      }}
-    >
-      <h2>Signup</h2>
+    <div className="flex min-h-screen w-full items-center justify-center px-4">
+      <form
+        onSubmit={handleSignup}
+        className="
+          w-full max-w-sm 
+          rounded-2xl 
+          border border-neutral-800 
+          bg-neutral-
+          backdrop-blur-md 
+          p-6 
+          shadow-xl 
+          flex flex-col gap-4
+        "
+      >
+        <h2 className="text-2xl font-bold text-center text-white">
+          Create Account
+        </h2>
 
-      <input
-        placeholder="Email"
-        value={form.email}
-        onChange={e => setForm({ ...form, email: e.target.value })}
-        required
-      />
+        {/* INPUTS — clean white bg */}
+        <input
+          placeholder="Email"
+          value={form.email}
+          onChange={(e) => setForm({ ...form, email: e.target.value })}
+          required
+          className="
+            w-full rounded-lg px-3 py-2 
+            bg-white text-black 
+            border border-neutral-300 
+            focus:outline-none focus:ring-2 focus:ring-neutral-500
+          "
+        />
 
-      <input
-        placeholder="Password"
-        type="password"
-        value={form.password}
-        onChange={e => setForm({ ...form, password: e.target.value })}
-        required
-      />
+        <input
+          placeholder="Password"
+          type="password"
+          value={form.password}
+          onChange={(e) => setForm({ ...form, password: e.target.value })}
+          required
+          className="
+            w-full rounded-lg px-3 py-2 
+            bg-white text-black 
+            border border-neutral-300 
+            focus:outline-none focus:ring-2 focus:ring-neutral-500
+          "
+        />
 
-      <input
-        placeholder="Username"
-        value={form.username}
-        onChange={e => setForm({ ...form, username: e.target.value })}
-        required
-      />
+        <input
+          placeholder="Username"
+          value={form.username}
+          onChange={(e) => setForm({ ...form, username: e.target.value })}
+          required
+          className="
+            w-full rounded-lg px-3 py-2 
+            bg-white text-black 
+            border border-neutral-300 
+            focus:outline-none focus:ring-2 focus:ring-neutral-500
+          "
+        />
 
-      <input
-        placeholder="Full Name"
-        value={form.name}
-        onChange={e => setForm({ ...form, name: e.target.value })}
-      />
+        <input
+          placeholder="Full Name"
+          value={form.name}
+          onChange={(e) => setForm({ ...form, name: e.target.value })}
+          className="
+            w-full rounded-lg px-3 py-2 
+            bg-white text-black 
+            border border-neutral-300 
+            focus:outline-none focus:ring-2 focus:ring-neutral-500
+          "
+        />
 
-      {/* Gender Selection */}
-      <div>
-        <label style={{ marginRight: "10px" }}>Gender:</label>
+        {/* Gender Selection */}
+        <div className="flex flex-row items-center text-white">
+          <div className="flex gap-6">
+            <label className="flex items-center gap-2">
+              <input
+                type="radio"
+                name="gender"
+                value="male"
+                checked={form.gender === "male"}
+                onChange={(e) => setForm({ ...form, gender: e.target.value })}
+                className="accent-blue-500"
+              />
+              Male
+            </label>
 
-        <label>
-          <input
-            type="radio"
-            name="gender"
-            value="male"
-            checked={form.gender === "male"}
-            onChange={(e) => setForm({ ...form, gender: e.target.value })}
-          />
-          Male
-        </label>
+            <label className="flex items-center gap-2">
+              <input
+                type="radio"
+                name="gender"
+                value="female"
+                checked={form.gender === "female"}
+                onChange={(e) => setForm({ ...form, gender: e.target.value })}
+                className="accent-blue-500"
+              />
+              Female
+            </label>
+          </div>
+        </div>
 
-        <label style={{ marginLeft: "10px" }}>
-          <input
-            type="radio"
-            name="gender"
-            value="female"
-            checked={form.gender === "female"}
-            onChange={(e) => setForm({ ...form, gender: e.target.value })}
-          />
-          Female
-        </label>
-      </div>
+        {errorMsg && (
+          <p className="text-red-400 text-center text-sm mt-1">{errorMsg}</p>
+        )}
 
-      {errorMsg && <p style={{ color: "red" }}>{errorMsg}</p>}
+        {/* Button */}
+        <button
+          type="submit"
+          disabled={loading}
+          className="
+            w-full rounded-lg 
+            bg-white text-black font-semibold py-2 
+            hover:bg-neutral-200 transition 
+            disabled:opacity-50
+          "
+        >
+          {loading ? "Signing up..." : "Signup"}
+        </button>
 
-      <button type="submit" disabled={loading}>
-        {loading ? "Signing up..." : "Signup"}
-      </button>
-    </form>
+        {/* Link */}
+        <div className="text-center text-neutral-300 mt-2">
+          Already have an account?{" "}
+          <a
+            href="/login"
+            className="text-white underline hover:text-neutral-200 transition"
+          >
+            Log in
+          </a>
+        </div>
+      </form>
+    </div>
   );
 }
