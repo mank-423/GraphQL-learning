@@ -3,11 +3,30 @@ import Cookies from "js-cookie";
 import toast from "react-hot-toast";
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
+import { useMutation, useQuery } from "@apollo/client/react";
+import { GET_TRANSACTION } from "@/graphql/queries/transaction.queries";
+import { UPDATE_TRANSACTION } from "@/graphql/mutations/transaction.mutation";
 
 const Transaction = () => {
-  const token = Cookies.get("sb_token");
   const { id } = useParams();
   const navigate = useNavigate();
+
+  const [errorMsg, setErrorMsg] = useState(null);
+
+  const { loading, data } = useQuery(GET_TRANSACTION, {
+    onError: (err) => {
+      setErrorMsg(err.message)
+    },
+    variables: {
+      transactionId: id,
+    }
+  });
+
+  const [updateTransaction, { loading: saving }] = useMutation(UPDATE_TRANSACTION, {
+    onError: (err) => {
+      setErrorMsg(err.message);
+    }
+  });
 
   const [form, setForm] = useState({
     amount: "",
@@ -15,107 +34,49 @@ const Transaction = () => {
     type: "",
   });
 
-  const [saving, setSaving] = useState(false);
-  const [errorMsg, setErrorMsg] = useState(null);
-  const [loading, setLoading] = useState(false);
 
-  const fetchTransactionDetails = async () => {
-    try {
-      setLoading(true);
-
-      const query = `
-        query($transactionId: ID!) {
-          transaction(transactionId: $transactionId) {
-            id
-            amount
-            description
-            type
-          }
-        }
-      `;
-
-      const res = await fetch("http://localhost:4000/graphql", {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          query,
-          variables: { transactionId: id },
-        }),
-      });
-
-      const json = await res.json();
-      if (json.errors) throw new Error(json.errors[0].message);
-
-      setForm({
-        amount: json.data.transaction.amount,
-        description: json.data.transaction.description,
-        type: json.data.transaction.type,
-      });
-
-      toast.success("Transaction edited!");
-    } catch (error) {
-      toast.error(error.message || "Failed to load transaction");
-      setErrorMsg(error.message);
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const handleUpdate = async (e) => {
     e.preventDefault();
-    setSaving(true);
     setErrorMsg(null);
 
     try {
-      const mutation = `
-        mutation($input: UpdateTransactionInput!) {
-          updateTransaction(input: $input) {
-            id
-            amount
-            description
-            type
-          }
-        }
-      `;
 
-      const res = await fetch("http://localhost:4000/graphql", {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          query: mutation,
-          variables: {
-            input: {
-              transactionId: id,
-              amount: parseFloat(form.amount),
-              description: form.description,
-              type: form.type,
-            },
+      const res = await updateTransaction({
+        variables: {
+          input: {
+            transactionId: id,
+            amount: parseFloat(form.amount),
+            description: form.description,
+            type: form.type,
           },
-        }),
-      });
+        }
+      })
 
-      const json = await res.json();
-      if (json.errors) throw new Error(json.errors[0].message);
+      if (!res.data) {
+        throw new Error("No response returned");
+      }
 
       toast.success("Transaction updated!");
       navigate("/");
     } catch (error) {
       toast.error(error.message || "Error updating transaction");
       setErrorMsg(error.message);
-    } finally {
-      setSaving(false);
     }
   };
 
+  const handleChange = (key, val) => {
+    setForm({
+      ...form,
+      [key]: val,
+    });
+  }
+
   useEffect(() => {
-    fetchTransactionDetails();
-  }, []);
+    if (data?.transaction) {
+      setForm(data?.transaction);
+    }
+  }, [data]);
 
   return (
     <div className="flex justify-center items-center min-h-screen">
@@ -132,7 +93,7 @@ const Transaction = () => {
             type="number"
             placeholder="Amount"
             value={form.amount}
-            onChange={(e) => setForm({ ...form, amount: e.target.value })}
+            onChange={(e) => handleChange('amount', e.target.value)}
             className="border p-2 rounded"
             required
           />
@@ -141,7 +102,7 @@ const Transaction = () => {
             type="text"
             placeholder="Description"
             value={form.description}
-            onChange={(e) => setForm({ ...form, description: e.target.value })}
+            onChange={(e) => handleChange('description', e.target.value)}
             className="border p-2 rounded"
             required
           />
@@ -153,7 +114,7 @@ const Transaction = () => {
                 name="type"
                 value="credit"
                 checked={form.type === "credit"}
-                onChange={(e) => setForm({ ...form, type: e.target.value })}
+                onChange={(e) => handleChange('type', e.target.value)}
               />
               <span className="ml-1">Credit</span>
             </label>
@@ -164,7 +125,7 @@ const Transaction = () => {
                 name="type"
                 value="debit"
                 checked={form.type === "debit"}
-                onChange={(e) => setForm({ ...form, type: e.target.value })}
+                onChange={(e) => handleChange('type', e.target.value)}
               />
               <span className="ml-1">Debit</span>
             </label>

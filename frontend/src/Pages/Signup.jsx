@@ -1,4 +1,7 @@
+import { SIGNUP_MUTATION } from "@/graphql/mutations/user.mutation";
+import { useMutation } from "@apollo/client/react";
 import { useState } from "react";
+import toast from "react-hot-toast";
 
 export default function Signup() {
   const [form, setForm] = useState({
@@ -9,48 +12,34 @@ export default function Signup() {
     gender: "",
   });
 
+  const [signUp, { loading }] = useMutation(SIGNUP_MUTATION, {
+    onError: (err) => {
+      setErrorMsg(err.message);
+    }
+  });
+
   const [errorMsg, setErrorMsg] = useState(null);
-  const [loading, setLoading] = useState(false);
 
   const handleSignup = async (e) => {
     e.preventDefault();
     setErrorMsg(null);
-    setLoading(true);
 
-    const SIGNUP_MUTATION = `
-      mutation signUp($input: SignUpInput!) {
-        signUp(input: $input) {
-          id
-          username
-        }
-      }
-    `;
 
     try {
-      const res = await fetch("http://localhost:4000/graphql", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          query: SIGNUP_MUTATION,
-          variables: { input: form },
-        }),
+
+      const res = await signUp({
+        variables: {
+          input: form,
+        }
       });
 
-      const result = await res.json();
+      if (!res.data?.signUp) return;
 
-      if (result.errors) {
-        setErrorMsg(result.errors[0].message);
-        setLoading(false);
-        return;
-      }
-
-      alert("Signup successful!");
+      toast.success('Sign-up successful!');
       window.location.href = "/login";
     } catch (err) {
       setErrorMsg("Something went wrong. Please try again.");
     }
-
-    setLoading(false);
   };
 
   return (

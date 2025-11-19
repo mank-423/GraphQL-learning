@@ -5,8 +5,10 @@ import toast from "react-hot-toast";
 import FormSkeleton from "@/components/Skeleton/FormSkeleton";
 import TransactionCard from "@/components/Card/TransactionCard";
 import TransactionChart from "@/components/TransactionChart";
-import { useQuery } from "@apollo/client/react";
+import { useMutation, useQuery } from "@apollo/client/react";
 import { GET_AUTHENTICATED_USER } from "@/graphql/queries/user.queries";
+import { GET_TRANSACTIONS } from "@/graphql/queries/transaction.queries";
+import { CREATE_TRANSACTION } from "@/graphql/mutations/transaction.mutation";
 
 const Home = () => {
   const token = Cookies.get("sb_token");
@@ -17,20 +19,35 @@ const Home = () => {
     error: userError
   } = useQuery(GET_AUTHENTICATED_USER);
 
+  const {
+    loading: loadingTransactions,
+    data: transactionData,
+    error: transactionError,
+    refetch: refetchTransactions,
+  } = useQuery(GET_TRANSACTIONS);
+
+  const [
+    createTransaction,
+    {
+      loading: saving,
+      error: errorMsg,
+    }] = useMutation(CREATE_TRANSACTION, {
+      onError: (err) => {
+        toast.error(err.message);
+      }
+    });
+
+  const transactions = transactionData?.transactions || [];
+
   const userData = userResponse?.authUser || null;
 
   const [profileLoading, setProfileLoading] = useState(true);
 
-  const [transactions, setTransactions] = useState([]);
-
   const [form, setForm] = useState({
     amount: "",
     description: "",
-    type: "",
+    type: "debit",
   });
-
-  const [saving, setSaving] = useState(false);
-  const [errorMsg, setErrorMsg] = useState(null);
 
   // Load profile after GraphQL query finishes
   useEffect(() => {
@@ -39,96 +56,43 @@ const Home = () => {
     }
   }, [loading]);
 
-  const fetchTransactions = async () => {
-    const QUERY = `
-      query {
-        transactions {
-          id
-          amount
-          description
-          type
-        }
-      }
-    `;
-
-    try {
-      const res = await fetch("http://localhost:4000/graphql", {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ query: QUERY }),
-      });
-
-      const json = await res.json();
-      if (json.errors) throw new Error(json.errors[0].message);
-
-      setTransactions(json.data.transactions);
-    } catch (e) {
-      console.error("Transaction fetch error:", e);
-    }
-  };
-
   const handleCreate = async (e) => {
     e.preventDefault();
-    setSaving(true);
-    setErrorMsg(null);
+
+    if (!form.amount || isNaN(parseFloat(form.amount))) {
+      return toast.error("Amount must be a valid number");
+    }
 
     try {
-      const mutation = `
-        mutation($input: CreateTransactionInput!) {
-          createTransaction(input: $input) {
-            id
-            amount
-            description
-            type
-          }
-        }
-      `;
-
-      const res = await fetch("http://localhost:4000/graphql", {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          query: mutation,
-          variables: {
-            input: {
-              amount: parseFloat(form.amount),
-              description: form.description,
-              type: form.type,
-            },
+      await createTransaction({
+        variables: {
+          input: {
+            amount: parseFloat(form.amount),
+            description: form.description,
+            type: form.type,
           },
-        }),
+        },
       });
 
-      const json = await res.json();
-      if (json.errors) throw new Error(json.errors[0].message);
+      if (!res.data?.createTransaction) return;
 
       toast.success("Transaction created!");
 
+      // Only reset if mutation succeeded
       setForm({ amount: "", description: "", type: "" });
 
-      fetchTransactions(); // refresh list
+      refetchTransactions();
+
     } catch (err) {
-      setErrorMsg(err.message);
       toast.error(err.message);
-    } finally {
-      setSaving(false);
     }
+
   };
 
   const logout = () => {
     Cookies.remove("sb_token");
     window.location.href = "/login";
   };
-
-  useEffect(() => {
-    fetchTransactions();
-  }, []);
 
   if (userError) {
     return (
@@ -169,7 +133,7 @@ const Home = () => {
 
         {/* Left: Chart */}
         <div className="w-full">
-          <TransactionChart transactions={transactions} />
+          {!loadingTransactions && <TransactionChart transactions={transactions} />}
         </div>
 
         {/* Right: Form */}
@@ -242,11 +206,14 @@ const Home = () => {
 
       {/* Cards Section */}
       <div className="mt-10 w-full max-w-3xl flex flex-wrap gap-4 justify-center">
-        {transactions.length === 0 ? (
+        {!loadingTransactions ? transactions.length === 0 ? (
           <p className="text-gray-500 w-full text-center">No transactions yet.</p>
         ) : (
           transactions.map((tx) => <TransactionCard key={tx.id} tx={tx} />)
-        )}
+        ) : (
+          <p className="text-gray-500 w-full text-center">Loading transactions...</p>
+        )
+        }
       </div>
 
     </div>
