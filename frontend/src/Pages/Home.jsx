@@ -5,15 +5,23 @@ import toast from "react-hot-toast";
 import FormSkeleton from "@/components/Skeleton/FormSkeleton";
 import TransactionCard from "@/components/Card/TransactionCard";
 import TransactionChart from "@/components/TransactionChart";
+import { useQuery } from "@apollo/client/react";
+import { GET_AUTHENTICATED_USER } from "@/graphql/queries/user.queries";
 
 const Home = () => {
   const token = Cookies.get("sb_token");
 
-  const [loading, setLoading] = useState(true);
+  const {
+    loading,
+    data: userResponse,
+    error: userError
+  } = useQuery(GET_AUTHENTICATED_USER);
+
+  const userData = userResponse?.authUser || null;
+
   const [profileLoading, setProfileLoading] = useState(true);
 
   const [transactions, setTransactions] = useState([]);
-  const [userData, setUserData] = useState(null);
 
   const [form, setForm] = useState({
     amount: "",
@@ -24,38 +32,12 @@ const Home = () => {
   const [saving, setSaving] = useState(false);
   const [errorMsg, setErrorMsg] = useState(null);
 
-  const fetchUser = async () => {
-    const USER_QUERY = `
-      query {
-        authUser {
-          id
-          username
-          profilepic
-        }
-      }
-    `;
-
-    try {
-      const res = await fetch("http://localhost:4000/graphql", {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ query: USER_QUERY }),
-      });
-
-      const json = await res.json();
-      if (json.errors) throw new Error(json.errors[0].message);
-
-      setUserData(json.data.authUser);
-      setTimeout(() => setProfileLoading(false), 500);
-    } catch (e) {
-      console.error("User fetch error:", e);
+  // Load profile after GraphQL query finishes
+  useEffect(() => {
+    if (!loading) {
+      setProfileLoading(false);
     }
-
-    setLoading(false);
-  };
+  }, [loading]);
 
   const fetchTransactions = async () => {
     const QUERY = `
@@ -145,9 +127,16 @@ const Home = () => {
   };
 
   useEffect(() => {
-    fetchUser();
     fetchTransactions();
   }, []);
+
+  if (userError) {
+    return (
+      <div className="text-red-500 text-center mt-10">
+        Failed to load user: {userError.message}
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen p-8 flex flex-col items-center">
@@ -251,7 +240,7 @@ const Home = () => {
 
       </div>
 
-      {/* Cards Section (Below) */}
+      {/* Cards Section */}
       <div className="mt-10 w-full max-w-3xl flex flex-wrap gap-4 justify-center">
         {transactions.length === 0 ? (
           <p className="text-gray-500 w-full text-center">No transactions yet.</p>
