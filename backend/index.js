@@ -34,7 +34,7 @@ await connectDB();
 await server.start();
 
 app.use(
-  "/graphql",
+  "/api/graphql",
   cors(),
   express.json(),
   expressMiddleware(server, {

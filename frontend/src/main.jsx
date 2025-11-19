@@ -21,7 +21,7 @@ const authLink = new ApolloLink((operation, forward) => {
 
 export const client = new ApolloClient({
   link: authLink.concat(new HttpLink({ 
-    uri: import.meta.env.VITE_NODE_ENV === "development" ? import.meta.env.VITE_BACKEND_DEV_URL : "/graphql" })
+    uri: import.meta.env.VITE_NODE_ENV === "development" ? import.meta.env.VITE_BACKEND_DEV_URL : "/api/graphql" })
   ),
   cache: new InMemoryCache(),
 });
