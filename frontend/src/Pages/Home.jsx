@@ -65,7 +65,7 @@ const Home = () => {
     }
 
     try {
-      await createTransaction({
+      const res = await createTransaction({
         variables: {
           input: {
             amount: parseFloat(form.amount),
