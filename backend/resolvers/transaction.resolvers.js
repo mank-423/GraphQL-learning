@@ -41,6 +41,30 @@ const transactionResolver = {
                 console.log('Error:', error.message);
                 throw new Error(error.message || 'Error getting individual transaction');
             }
+        },
+
+        // Category statistics
+        categoryStatistics: async (_, __, { userId }) => {
+            try {
+                const categoryMap = {};
+
+                const res = await supabase.from('transactions').select("*").eq('user_id', userId);
+
+                if (res?.data){
+                    res.data.map((transaction) => {
+                        if (categoryMap[transaction.type]){
+                            categoryMap[transaction.type] += parseFloat(transaction.amount);
+                        }else{
+                            categoryMap[transaction.type] = parseFloat(transaction.amount);
+                        }
+                    })
+                }
+
+                return categoryMap;
+
+            } catch (error) {
+                console.log('Error category statistics:', error.message);
+            }
         }
     },
     Mutation: {
@@ -96,12 +120,12 @@ const transactionResolver = {
             }
         },
 
-        deleteTransaction: async (_, { input }, { userId }) => {
+        deleteTransaction: async (_, { transactionId }, { userId }) => {
             try {
                 const { data, error } = await supabase
                     .from("transactions")
                     .delete()
-                    .eq('id', input.transactionId) // Added quotes
+                    .eq('id', transactionId) // Added quotes
                     .select() // Add select to return deleted data
                     .single();
 
@@ -109,11 +133,7 @@ const transactionResolver = {
                     throw new Error(error.message);
                 }
 
-                return { 
-                    success: true, 
-                    message: 'Transaction deleted successfully',
-                    deletedTransaction: data 
-                };
+                return data;
 
             } catch (error) {
                 console.log('Error deleting transaction:', error.message);

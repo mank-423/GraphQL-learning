@@ -7,10 +7,16 @@ const transactionTypeDef = `#graphql
         type: String!
     }
 
+    type Stats{
+        credit: Float!
+        debit: Float!
+    }
+
 
     type Query{
         transactions: [Transaction!]
         transaction(transactionId: ID!): Transaction
+        categoryStatistics: Stats!
     }
 
     type Mutation {
