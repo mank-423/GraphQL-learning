@@ -9,6 +9,7 @@ import { useMutation, useQuery } from "@apollo/client/react";
 import { GET_AUTHENTICATED_USER } from "@/graphql/queries/user.queries";
 import { GET_TRANSACTIONS } from "@/graphql/queries/transaction.queries";
 import { CREATE_TRANSACTION } from "@/graphql/mutations/transaction.mutation";
+import { client } from "@/main";
 
 const Home = () => {
   const token = Cookies.get("sb_token");
@@ -91,6 +92,7 @@ const Home = () => {
 
   const logout = () => {
     Cookies.remove("sb_token");
+    client.clearStore(); // Clearing the cached data
     window.location.href = "/login";
   };
 

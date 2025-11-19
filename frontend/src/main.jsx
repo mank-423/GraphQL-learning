@@ -19,7 +19,7 @@ const authLink = new ApolloLink((operation, forward) => {
   return forward(operation);
 });
 
-const client = new ApolloClient({
+export const client = new ApolloClient({
   link: authLink.concat(new HttpLink({ uri: import.meta.env.VITE_BACKEND_URL })),
   cache: new InMemoryCache(),
 });

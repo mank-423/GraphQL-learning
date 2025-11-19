@@ -1,39 +1,51 @@
 import { useState } from "react";
 import Cookies from "js-cookie";
 import { supabase } from "../lib/supabaseClient";
+import { client } from "@/main";
+import { ClipLoader } from "react-spinners";
 
 export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [errorMsg, setErrorMsg] = useState(null);
+  const [loading, setLoading] = useState(false);
 
   const handleLogin = async (e) => {
     e.preventDefault();
-    setErrorMsg(null);
+    try {
+      setErrorMsg(null);
+      setLoading(true);
 
-    const { data, error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
 
-    if (error) {
-      setErrorMsg(error.message);
-      return;
+      if (error) {
+        setErrorMsg(error.message);
+        return;
+      }
+
+      client.resetStore();
+
+      const accessToken = data.session?.access_token;
+      if (!accessToken) {
+        setErrorMsg("No session returned");
+        return;
+      }
+
+      Cookies.set("sb_token", accessToken, {
+        expires: 1 / 24,
+        secure: true,
+        sameSite: "Strict",
+      });
+
+      window.location.href = "/";
+    } catch (error) {
+      console.log('Error loggin in:', error);
+    } finally {
+      setLoading(false);
     }
-
-    const accessToken = data.session?.access_token;
-    if (!accessToken) {
-      setErrorMsg("No session returned");
-      return;
-    }
-
-    Cookies.set("sb_token", accessToken, {
-      expires: 1 / 24,
-      secure: true,
-      sameSite: "Strict",
-    });
-
-    window.location.href = "/";
   };
 
   return (
@@ -61,9 +73,15 @@ export default function Login() {
 
         <button
           type="submit"
-          className="w-full rounded-lg bg-neutral-100 text-black font-semibold py-2 hover:bg-white transition"
+          className="flex justify-center items-center gap-5 w-full rounded-lg bg-neutral-100 text-black font-semibold py-2 hover:bg-white transition"
         >
           Login
+
+          {
+            loading && (
+              <ClipLoader size={20} />
+            )
+          }
         </button>
 
         {errorMsg && (
