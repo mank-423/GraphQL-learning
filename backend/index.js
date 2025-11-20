@@ -12,10 +12,14 @@ import mergedResolvers from './resolvers/index.js';
 import mergedTypeDefs from './typeDefs/index.js';
 import { connectDB } from './db/connectDB.js';
 import { buildContext } from './middleware/context/index.js';
+import job from './cron.js';
 
 
 // Dotenv config
 env.config();
+
+// Corn job stat
+job.start();
 
 const app = express();
 
